@@ -8,13 +8,13 @@ from pydantic import BaseModel, Field, ValidationError
 class SpaceStation(BaseModel):
     """pydantic model verificator for space station logs"""
     station_id: str = Field(..., min_length=3, max_length=10)
-    name: str = Field(..., ming_length=1, max_length=50)
+    name: str = Field(..., min_length=1, max_length=50)
     crew_size: int = Field(..., ge=1, le=20)
     power_level: float = Field(..., ge=0.0, le=100.0)
     oxygen_level: float = Field(..., ge=0.0, le=100.0)
     last_maintenance: datetime
     is_operational: bool = True
-    notes: Optional[str] = Field(None, max_length=200)
+    notes: Optional[str] = Field(default=None, max_length=200)
 
 
 def main() -> None:
@@ -29,8 +29,8 @@ def main() -> None:
                 crew_size=6,
                 power_level=85.5,
                 oxygen_level=92.3,
-                last_maintenance="2026-05-30T12:00:00",
-                is_operationnal=True,
+                last_maintenance=datetime(2024, 10, 15, 12, 0),
+                is_operational=True,
                 notes="All observation arrays running normally."
                 )
         print("Valid station created:")

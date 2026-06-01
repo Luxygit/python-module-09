@@ -23,7 +23,7 @@ class AlienContact(BaseModel):
     signal_strength: float = Field(..., ge=0.0, le=10.0)
     duration_minutes: int = Field(..., ge=1, le=1440)
     witness_count: int = Field(..., ge=1, le=100)
-    message_received: Optional[str] = Field(None, max_length=500)
+    message_received: Optional[str] = Field(default=None, max_length=500)
     is_verified: bool = False
 
     @model_validator(mode="after")
@@ -51,7 +51,7 @@ def main() -> None:
     try:
         valid_report = AlienContact(
                 contact_id="AC_2024_001",
-                timestamp="2024-05-30T22:15:00",
+                timestamp=datetime(2024, 10, 15, 12, 0),
                 location="Area 51, Nevada",
                 contact_type=ContactType.RADIO,
                 signal_strength=8.5,

@@ -2,12 +2,16 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
-from pydantic import BaseModel, Field, ValidationError, model_validator
+from pydantic import (  # type: ignore
+        BaseModel,
+        Field,
+        ValidationError,
+        model_validator
+        )
 
 
 class ContactType(str, Enum):
-    """enumeration of authorized tracking modes."""
+    """ of authorized tracking modes."""
     RADIO = "radio"
     VISUAL = "visual"
     PHYSICAL = "physical"
@@ -23,20 +27,26 @@ class AlienContact(BaseModel):
     signal_strength: float = Field(..., ge=0.0, le=10.0)
     duration_minutes: int = Field(..., ge=1, le=1440)
     witness_count: int = Field(..., ge=1, le=100)
-    message_received: Optional[str] = Field(default=None, max_length=500)
+    message_received: str | None = Field(default=None, max_length=500)
     is_verified: bool = False
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "AlienContact":
-        """custom validation"""
+        """
+        model validator decorator makes it so custom validation is passed
+        after all indifividual fields have passed their base type validation
+        self is passed and returned because of the model validator mode after
+        """
         if not self.contact_id.startswith("AC"):
             raise ValueError("Contact ID must start with 'AC'")
         if self.contact_type == ContactType.PHYSICAL and not self.is_verified:
             raise ValueError("Physical contact reports must be verified")
-        if self.contact_type == ContactType.TELEPATHIC\
-                and self.witness_count < 3:
+        if (
+                self.contact_type == ContactType.TELEPATHIC
+                and self.witness_count < 3
+                ):
             raise ValueError(
-                "Telephatic contact requires at least 3 wtinesses"
+                "Telepathic contact requires at least 3 witnesses"
             )
         if self.signal_strength > 7.0 and not self.message_received:
             raise ValueError(
@@ -83,9 +93,9 @@ def main() -> None:
                 witness_count=2,
                 is_verified=True,
                 )
-    except ValidationError as ve:
-        for error in ve.errors():
-            print(error["msg"])
+    except ValidationError as e:
+        for error in e.errors():
+            print(error['msg'])
 
 
 if __name__ == "__main__":

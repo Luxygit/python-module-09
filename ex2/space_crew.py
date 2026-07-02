@@ -6,8 +6,12 @@ mypy --python-executable venv/bin/python3 *.py
 
 from datetime import datetime
 from enum import Enum
-from typing import List
-from pydantic import BaseModel, Field, model_validator
+from pydantic import (  # type: ignore
+        BaseModel,
+        Field,
+        model_validator,
+        ValidationError
+        )
 
 
 class Rank(str, Enum):
@@ -37,13 +41,13 @@ class SpaceMission(BaseModel):
     destination: str = Field(..., min_length=3, max_length=50)
     launch_date: datetime
     duration_days: int = Field(..., ge=1, le=3650)
-    crew: List[CrewMember] = Field(..., min_length=1, max_length=12)
+    crew: list[CrewMember] = Field(..., min_length=1, max_length=12)
     mission_status: str = "planned"
     budget_millions: float = Field(..., ge=1.0, le=10000.0)
- 
+
     @model_validator(mode='after')
     def validate_mission_safety(self) -> 'SpaceMission':
-        """validates mission security"""
+        """validates a mix of validations after initial ind validation"""
         if not self.mission_id.startswith('M'):
             raise ValueError("Mission ID must start with 'M'")
         if not all(member.is_active for member in self.crew):
@@ -102,7 +106,7 @@ def main() -> None:
         for member in valid_mission.crew:
             print(f"- {member.name} ({member.rank.value}) - "
                   f"{member.specialization}")
-    except Exception as e:
+    except ValidationError as e:
         print(f"Unexpected error creating valid mission: {e}")
     print("\n=======================================")
     print("Expected validation error:")
@@ -117,14 +121,8 @@ def main() -> None:
                 crew=[pilot, engineer],
                 budget_millions=150.0
                 )
-    except Exception as e:
-        if hasattr(e, 'errors'):
-            msg = e.errors()[0]['msg']
-            if msg.startswith("Value error, "):
-                msg = msg[13:]
-            print(msg)
-        else:
-            print(e)
+    except ValidationError as e:
+        print(e.errors()[0]["msg"].replace("Value error, ", ""))
 
 
 if __name__ == "__main__":

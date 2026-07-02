@@ -1,8 +1,7 @@
 """explicit data validation with Pydantic layout"""
 
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError  # type: ignore
 
 
 class SpaceStation(BaseModel):
@@ -14,51 +13,50 @@ class SpaceStation(BaseModel):
     oxygen_level: float = Field(..., ge=0.0, le=100.0)
     last_maintenance: datetime
     is_operational: bool = True
-    notes: Optional[str] = Field(default=None, max_length=200)
+    notes: str | None = Field(default=None, max_length=200)
 
 
 def main() -> None:
     """executing invalid and valid states"""
     print("Space Station Data Validation")
     print("=====================================")
-    # valid space station log
     try:
         valid_station = SpaceStation(
-                station_id="ISO01",
+                station_id="ISS001",
                 name="International Space Station",
                 crew_size=6,
                 power_level=85.5,
                 oxygen_level=92.3,
-                last_maintenance=datetime(2024, 10, 15, 12, 0),
-                is_operational=True,
-                notes="All observation arrays running normally."
+                last_maintenance="2024-06-23T12:00:00",
+                notes="All observations OK."
                 )
+        status = "Operation" if valid_station.is_operational\
+            else "Offline"
         print("Valid station created:")
         print(f"ID: {valid_station.station_id}")
         print(f"Name: {valid_station.name}")
         print(f"Crew: {valid_station.crew_size} people")
         print(f"Power: {valid_station.power_level}%")
         print(f"Oxygen: {valid_station.oxygen_level}%")
-        status_str = "Operational" if valid_station.is_operational\
-            else "Offline"
-        print(f"Status: {status_str}")
-    except ValidationError as e:
+        print(f"Status: {status}")
+        if valid_station.notes:
+            print(f"Notes: {valid_station.notes}")
+    except Exception as e:
         print(f"Unexpected initialization error: {e}")
-    print("=========================================")
+    print("\n=========================================")
     print("Expected validation error:")
     try:
         SpaceStation(
-                station_id="FAIL42",
-                name="Overcrowded Hub",
+                station_id="ISS002",
+                name="Overcrowded Station",
                 crew_size=25,
-                power_level=42.0,
-                oxygen_level=80.0,
-                last_maintenance=datetime.now(),
+                power_level=50.0,
+                oxygen_level=50.0,
+                last_maintenance=datetime.now()
                 )
-    except ValidationError as ve:
-        # extracting localized error array block fields
-        for error in ve.errors():
-            print(error["msg"])
+    except ValidationError as e:
+        for err in e.errors():
+            print(err['msg'])
 
 
 if __name__ == "__main__":
